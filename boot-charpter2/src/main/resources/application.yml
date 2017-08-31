@@ -1,0 +1,9 @@
+logging:
+  level: info
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/guns
+    username: root
+    password: 666666
+    initialize: true
