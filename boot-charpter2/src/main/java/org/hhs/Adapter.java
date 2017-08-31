@@ -16,32 +16,13 @@ public class Adapter<T> {
     private Class<?> cls;
     private Object resultObj;
 
-    public Adapter(Class<?> cls){
-        this.cls = cls;
-    }
-
     public Adapter(ResultSet resultSet, Class<?> cls) {
         this.resultSet = resultSet;
         this.cls = cls;
-        this.resultObj = getResultObj();
-        setValues();
     }
-
-
 
     public Field[] getFields(){
         return cls.getDeclaredFields();
-    }
-
-    public Method[] getMethods(){
-        return cls.getDeclaredMethods();
-    }
-
-    public String firstUpper(String str) throws Exception{
-        if(str.trim().length() == 0 || str == null){
-            throw new Exception("String is null");
-        }
-        return str.substring(0, 1).toUpperCase()+str.substring(1);
     }
 
     public Object getResultObj() {
@@ -57,12 +38,16 @@ public class Adapter<T> {
     }
 
     public void setValues() {
+        this.resultObj = getResultObj();
         for (Field field : getFields()){
             field.setAccessible(true);
             String fieldName = field.getName();
             String methodName = "get"+getClassName(field.getType().getName());
             try {
-                field.set(this.resultObj, invokeMethod(this.resultSet, getResultSetMethod(methodName, field), new Object[]{fieldName.toLowerCase()}));
+                field.set(this.resultObj,
+                          invokeMethod(this.resultSet,
+                                       getResultSetMethod(methodName, field),
+                                        new Object[]{fieldName.toLowerCase()}));
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
@@ -74,6 +59,11 @@ public class Adapter<T> {
         try {
             method =  resultSet.getClass().getMethod(methodName, new Class[]{String.class});
         } catch (NoSuchMethodException e) {
+            try {
+                method =  resultSet.getClass().getMethod(methodName, new Class[]{field.getType()});
+            } catch (NoSuchMethodException e1) {
+                e1.printStackTrace();
+            }
             e.printStackTrace();
         }
         return method;
@@ -101,6 +91,7 @@ public class Adapter<T> {
     }
 
     public T getObj(){
+        setValues();
         return (T) this.resultObj;
     }
 
